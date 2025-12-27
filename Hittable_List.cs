@@ -18,14 +18,14 @@ public class HittableList: IHittable
     {
         Objects.Add(obj); 
     }
-    public bool Hit(Ray r, double tMin, double tMax, ref hit_record rec)
+    public bool Hit(Ray r, Interval ray_t, ref hit_record rec)
     {
         hit_record tempRec = new hit_record();
         bool hitAnything = false;
-        double closestSoFar = tMax;
+        double closestSoFar = ray_t.Max;
         foreach(var obj in Objects)
         {
-            if(obj.Hit(r, tMin, tMax, ref tempRec))
+            if(obj.Hit(r, new Interval(ray_t.Min, closestSoFar), ref tempRec))
             {
                 hitAnything = true;
                 closestSoFar = tempRec.t;

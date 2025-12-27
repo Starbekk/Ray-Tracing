@@ -9,8 +9,9 @@ namespace Ray_Tracing;
 public struct hit_record {
     public Vec3 p;
     public Vec3 normal;
+    public Material mat;
     public double t;
-    bool front_face;
+    public bool front_face;
     public void set_face_normal(Ray r, Vec3 outward_normal)
     {
         front_face = Vec3.Dot(r.Direction, outward_normal) < 0;
@@ -20,5 +21,5 @@ public struct hit_record {
 
 public interface IHittable
 {
-    bool Hit(Ray r, double tMin, double tMax, ref hit_record rec);
+    bool Hit(Ray r, Interval ray_t, ref hit_record rec);
 }

@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 namespace Ray_Tracing;
 
 public class Sphere : IHittable {
-    public Vec3 Center;
-    public double Radius;
-    public Sphere(Vec3 center, double radius) {
+    private Vec3 Center;
+    private double Radius;
+    private Material Mat;
+    public Sphere(Vec3 center, double radius, Material mat) {
         Center = center;
         Radius = Math.Max(0.0,radius);
+        Mat = mat;
     }
-    public bool Hit(Ray r, double tMin, double tMax, ref hit_record rec)
+    public bool Hit(Ray r, Interval ray_t, ref hit_record rec)
     {
         Vec3 oc = Center - r.Origin;
         var a = r.Direction.LengthSquared();
@@ -26,10 +28,10 @@ public class Sphere : IHittable {
         }
         var sqrtd = Math.Sqrt(discriminant);
         var root = (h - sqrtd) / a;
-        if (root < tMin || tMax <= root)
+        if (!ray_t.Surrounds(root))
         {
             root = (h + sqrtd) / a;
-            if (root < tMin || tMax <= root)
+            if (!ray_t.Surrounds(root))
             {
                 return false;
             }
@@ -38,6 +40,7 @@ public class Sphere : IHittable {
         rec.p = r.At(rec.t);
         Vec3 outward_normal = (rec.p - Center ) / Radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat = Mat;
         return true;
     }
 

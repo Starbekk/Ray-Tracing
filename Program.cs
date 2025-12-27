@@ -4,75 +4,63 @@ namespace Ray_Tracing;
 
 public class Image
 {
-    static double hit_sphere(Vec3 center, double radius, Ray r)
-    {
-        Vec3 oc = center - r.Origin;
-        var a = r.Direction.LengthSquared();
-        var h = Vec3.Dot(r.Direction, oc);
-        var c = oc.LengthSquared() - radius * radius;
-        var discriminant = h * h - a * c;
-        if (discriminant < 0)
-        {
-            return -1.0;
-        }
-        else
-        {
-            return (h - Math.Sqrt(discriminant)) / a;
-        }
-    }
-    static Vec3 RayColor(Ray r)
-    {
-        var t = hit_sphere(new Vec3(0,0,-1), 0.5, r);
-
-        if (t > 0.0){
-            Vec3 N = Vec3.UnitVector(r.At(t) - new Vec3(0, 0, -1));
-            return 0.5* new Vec3(N.x + 1, N.y + 1, N.z + 1 )    ;
-        }
-        Vec3 unit_Direction = Vec3.UnitVector(r.Direction);
-        var a = 0.5 * (unit_Direction.y + 1.0);
-
-        return (1.0 - a) * new Vec3(1.0, 1.0, 1.0) + a * new Vec3(0.5, 0.7, 1.0);
-    }
     static void Main()
     {
-        var aspect_Ratio = 16.0 / 9.0;
-        int image_Width = 400;
-        int image_Height = (int)(image_Width / aspect_Ratio);
-        if(image_Height < 1)
+ 
+        HittableList world = new HittableList();
+
+        var material_ground = new Lambertian(new Vec3(0.5,0.5,0.5));
+        world.Add(new Sphere(new Vec3(0, -1000, 0), 1000, material_ground));
+
+        for(int a = -11;  a < 11; a++)
         {
-            image_Height = 1;
-        }
-
-        var focal_length = 1.0;
-        var viewport_Height = 2.0;
-        var viewport_Width = viewport_Height * ((double)(image_Width) / image_Height);
-        var camera_Center = new Vec3(0, 0, 0);
-
-        var viewport_u = new Vec3(viewport_Width, 0, 0);
-        var viewport_v = new Vec3(0, -viewport_Height, 0);
-
-        var pixel_delta_u = viewport_u / image_Width;
-        var pixel_delta_v = viewport_v / image_Height;
-
-        var viewport_upper_left = camera_Center - new Vec3(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
-        var pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
-        Console.WriteLine("P3");
-        Console.WriteLine($"{image_Width} {image_Height}");
-        Console.WriteLine("255");
-        for (int j = 0; j < image_Height; j++)
-        {
-            Console.Error.Write($"\rScanlines remaining: {image_Height-j}  ");
-            for (int i = 0; i < image_Width; i++)
+            for(int b = -11; b < 11; b++)
             {
-                var pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-                var ray_Direction = pixel_center - camera_Center;
-                Ray r = new Ray(camera_Center, ray_Direction);
-                Vec3 pixelColor = RayColor(r);
-                Color.WriteColor(Console.Out,  pixelColor);
+                var choosemat = Rtweekend.RandomDouble();
+                Vec3 Center = new Vec3(a+0.9*Rtweekend.RandomDouble(), 0.2, b+0.9*Rtweekend.RandomDouble());
+                if((Center - new Vec3(4,0.2, 0)).Length() > 0.9)
+                {
+                    Material sphere_material;
+                    if(choosemat < 0.8)
+                    {
+                        var albedo = Vec3.Random() * Vec3.Random();
+                        sphere_material = new Lambertian(albedo);
+                        world.Add(new Sphere(Center, 0.2, sphere_material));
+                    }
+                    else if(choosemat < 0.95)
+                    {
+                        Vec3 albedo = Vec3.Random(0.5, 1.0);
+                            double fuzz = Rtweekend.RandomDouble(0.0, 0.5);
+                        sphere_material = new Metal(albedo, fuzz);
+                        world.Add(new Sphere(Center, 0.2, sphere_material));
+                    }
+                    else
+                    {
+                        sphere_material = new Dielectric(1.5);
+                        world.Add(new Sphere(Center, 0.2, sphere_material));
+                    }
+                }
+       
             }
         }
-        Console.Error.WriteLine();
-        Console.Error.Write($"\rDone.       \n");
+        Material material1 = new Dielectric(1.5);
+        world.Add(new Sphere(new Vec3(0, 1, 0), 1.0, material1));
+        Material material2 = new Lambertian(new Vec3(0.4,0.2,0.1));
+        world.Add(new Sphere(new Vec3(-4, 1, 0), 1.0, material2));
+        Material material3 = new Metal(new Vec3(0.7, 0.6, 0.5), 0.0);
+        world.Add(new Sphere(new Vec3(4, 1, 0), 1.0, material3));
+        Camera cam = new Camera();
+        cam.aspect_Ratio = 16.0 / 9.0;
+        cam.ImageWidth = 1200;
+        cam.samples_per_pixel = 500;
+        cam.MaxDepth = 50;
+        cam.vfov = 20;
+        cam.lookfrom = new Vec3(13,2,3);
+        cam.lookat = new Vec3(0, 0, 0);
+        cam.vup = new Vec3(0, 1, 0);
+        cam.defocus_angle = 0.6;
+        cam.focus_dist = 10.0;
+        cam.Render(world);
     }
 }
 
