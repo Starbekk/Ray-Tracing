@@ -12,7 +12,7 @@ public static class Color
         }
         return 0;
     }
-   public static void WriteColor(TextWriter output, Colorr pixelColor)
+   public static void WriteColor(TextWriter output, Vec3 pixelColor)
     {
         double r = pixelColor.x;
         double g = pixelColor.y;

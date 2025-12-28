@@ -37,21 +37,27 @@ public class Camera
         Console.WriteLine("P3");
         Console.WriteLine($"{ImageWidth} {ImageHeight}");
         Console.WriteLine("255");
-        for (int j = 0; j < ImageHeight; j++)
+        string[] rows = new string[ImageHeight];
+        Parallel.For(0, ImageHeight, j =>
         {
-            Console.Error.Write($"\rScanlines remaining: {ImageHeight - j}");
+            var sb = new StringBuilder(ImageWidth * 12);
             for (int i = 0; i < ImageWidth; i++)
             {
                 Vec3 pixelColor = new Vec3(0, 0, 0);
-                for(int sample = 0; sample < samples_per_pixel; sample++)
+                for (int sample = 0; sample < samples_per_pixel; sample++)
                 {
                     Ray r = GetRay(i, j);
 
                     pixelColor += RayColor(r, MaxDepth, world);
                 }
                 pixelColor *= pixel_samples_scale;
-                Color.WriteColor(Console.Out, pixelColor);
+                sb.Append(Colorr.WriteColorr(pixelColor));
             }
+            rows[j] = sb.ToString();
+        });
+        for(int j = 0; j < ImageHeight; j++)
+        {
+            Console.Write(rows[j]);
         }
         Console.Error.Write("\nDone.");
     }
